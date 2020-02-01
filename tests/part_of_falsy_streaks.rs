@@ -70,3 +70,17 @@ fn part_of_falsy_streak_5() {
   let tile = load_tile(tile).unwrap();
   assert!(part_of_falsy_streak(&tile) == false);
 }
+
+#[test]
+fn part_of_falsy_streak_6() {
+  let tile = ".#.
+.#.
+.#.
+...
+...
+...
+..."
+    .to_string();
+  let tile = load_tile(tile).unwrap();
+  assert!(part_of_falsy_streak(&tile) == true);
+}
