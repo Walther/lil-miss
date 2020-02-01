@@ -40,5 +40,6 @@ fn center_of_three_trues_column_3() {
 ..."
     .to_string();
   let tile = load_tile(tile).unwrap();
+  println!("{}", tile);
   assert!(center_of_three_trues_column(&tile) == true);
 }

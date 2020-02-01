@@ -1,28 +1,90 @@
-use std::collections::HashMap;
 use std::error::Error;
+use std::fmt;
+use std::fmt::Display;
 use std::io::{Error as ioError, ErrorKind};
 
-#[derive(std::cmp::PartialEq)]
+#[derive(std::cmp::PartialEq, Clone, Copy)]
 pub enum Square {
   False,
   True,
   Unknown,
 }
 
-pub type Tile = HashMap<(usize, usize), Square>;
+impl Display for Square {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      Square::True => write!(f, "#"),
+      Square::False => write!(f, "."),
+      Square::Unknown => write!(f, "?"),
+    }
+  }
+}
+
+#[derive(Clone, Copy)]
+pub struct Tile {
+  squares: [[Square; 3]; 7],
+}
+
+impl Tile {
+  fn new() -> Self {
+    // repeat and take and collect got annoying. ugly copypaste fix.
+    Tile {
+      squares: [
+        [Square::False, Square::False, Square::False],
+        [Square::False, Square::False, Square::False],
+        [Square::False, Square::False, Square::False],
+        [Square::False, Square::False, Square::False],
+        [Square::False, Square::False, Square::False],
+        [Square::False, Square::False, Square::False],
+        [Square::False, Square::False, Square::False],
+      ],
+    }
+  }
+
+  fn get(&self, (x, y): (usize, usize)) -> Option<&Square> {
+    Some(self.squares.get(y)?.get(x)?)
+  }
+
+  fn set(&mut self, (x, y): (usize, usize), value: Square) {
+    self.squares[y][x] = value; // FIXME: can panic
+  }
+}
+
+impl Display for Tile {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    let mut string = String::from("");
+    for row in self.squares.iter() {
+      for square in row.iter() {
+        string.push_str(format!("{}", square).as_str());
+      }
+      string.push('\n');
+    }
+    write!(f, "{}", string)
+  }
+}
 
 #[derive(std::cmp::PartialEq)]
 pub enum Status {
   False,
   True,
 }
+
+impl Display for Status {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      Status::True => write!(f, "1"),
+      Status::False => write!(f, "0"),
+    }
+  }
+}
+
 pub fn load_tile(contents: String) -> Result<Tile, String> {
-  let mut tile: Tile = HashMap::new();
+  let mut tile: Tile = Tile::new();
   let lines = contents.lines().enumerate();
   for (y, line) in lines {
     let chars = line.chars().enumerate();
     for (x, value) in chars {
-      tile.insert((x, y), parse_square(&value).unwrap());
+      tile.set((x, y), parse_square(&value).unwrap());
     }
   }
   Ok(tile)
@@ -53,11 +115,11 @@ pub fn validate_tile(tile: &Tile) -> Result<Status, Box<dyn Error>> {
   let center = (1, 3); // center of a 3x7 tile
   let to_its_right = (2, 3); // square to its right
 
-  if *tile.get(&center).unwrap() == Square::True {
+  if *tile.get(center).unwrap() == Square::True {
     Ok(Status::True)
   } else if center_of_three_trues_column(&tile) {
     Ok(Status::True)
-  } else if *tile.get(&to_its_right).unwrap() == Square::True && part_of_falsy_streak(&tile) {
+  } else if *tile.get(to_its_right).unwrap() == Square::True && part_of_falsy_streak(&tile) {
     Ok(Status::True)
   } else {
     Ok(Status::False)
@@ -66,13 +128,13 @@ pub fn validate_tile(tile: &Tile) -> Result<Status, Box<dyn Error>> {
 
 pub fn center_of_three_trues_column(tile: &Tile) -> bool {
   // dirty copypaste is easiest here i guess
-  *tile.get(&(1, 0)).unwrap() == Square::False
-    && *tile.get(&(1, 1)).unwrap() == Square::False
-    && *tile.get(&(1, 2)).unwrap() == Square::True
-    && *tile.get(&(1, 3)).unwrap() == Square::True
-    && *tile.get(&(1, 4)).unwrap() == Square::True
-    && *tile.get(&(1, 5)).unwrap() == Square::False
-    && *tile.get(&(1, 6)).unwrap() == Square::False
+  *tile.get((1, 0)).unwrap() == Square::False
+    && *tile.get((1, 1)).unwrap() == Square::False
+    && *tile.get((1, 2)).unwrap() == Square::True
+    && *tile.get((1, 3)).unwrap() == Square::True
+    && *tile.get((1, 4)).unwrap() == Square::True
+    && *tile.get((1, 5)).unwrap() == Square::False
+    && *tile.get((1, 6)).unwrap() == Square::False
 }
 
 pub fn part_of_falsy_streak(tile: &Tile) -> bool {
@@ -82,7 +144,7 @@ pub fn part_of_falsy_streak(tile: &Tile) -> bool {
   for shift in 0..=3 {
     streak = true; // assume true for current 4-column
     for row in 0..=3 {
-      if *tile.get(&(1, row + shift)).unwrap() == Square::True {
+      if *tile.get((1, row + shift)).unwrap() == Square::True {
         streak = false; // found a truthy square, breaks our column
         break;
       }

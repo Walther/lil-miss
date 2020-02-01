@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use std::error::Error;
-use std::fmt;
-use std::fmt::Display;
+
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 extern crate clap;
 use clap::{App, Arg};
+use std::env;
 
 extern crate pretty_env_logger;
 #[macro_use]
@@ -14,15 +14,6 @@ extern crate log;
 
 pub mod lib;
 use lib::*;
-
-impl Display for Status {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Status::True => write!(f, "1"),
-            Status::False => write!(f, "0"),
-        }
-    }
-}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let matches = App::new("lil-miss")
@@ -48,7 +39,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     debug!("Reading file: {}", filename);
     let contents = load_file(filename)?;
     debug!("Tile: \n{}", contents.clone());
-    let tile: HashMap<(usize, usize), Square> = load_tile(contents)?;
+    let tile = load_tile(contents)?;
     let valid: Status = validate_tile(&tile)?;
     println!("{}", valid);
     Ok(())
