@@ -26,7 +26,7 @@ pub struct Tile {
 }
 
 impl Tile {
-  fn new() -> Self {
+  pub fn new() -> Self {
     // repeat and take and collect got annoying. ugly copypaste fix.
     Tile {
       squares: [
@@ -76,6 +76,17 @@ impl Display for Status {
       Status::False => write!(f, "0"),
     }
   }
+}
+
+pub fn load_tile_binarystring(tile: &mut Tile, contents: &str) -> Result<Tile, Box<dyn Error>> {
+  let mut index = 0;
+  for binary in contents.chars() {
+    let y = index / 3;
+    let x = index % 3;
+    tile.set((x, y), parse_square(&binary).unwrap());
+    index += 1;
+  }
+  Ok(*tile)
 }
 
 pub fn load_tile(contents: String) -> Result<Tile, String> {
